@@ -6,11 +6,13 @@ import * as movieSchema from './schema/movie';
 
 const DB_CONNECTION = process.env.DB_CONNECTION || 'postgres://postgres:postgres@localhost:5432/postgres';
 
+const migrationsFolder = new URL('./migrations', import.meta.url).pathname;
+
 export async function migrateDatabase () {
     console.info(`Migrating database at ${DB_CONNECTION}`)
     const migrationClient = postgres(DB_CONNECTION, { max: 1, connect_timeout: 10 });
     try {
-        await migrate(drizzle(migrationClient), { migrationsFolder: './db/migrations'});
+        await migrate(drizzle(migrationClient), { migrationsFolder });
     } finally {
         await migrationClient.end();
     }
