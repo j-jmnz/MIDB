@@ -6,20 +6,18 @@ import * as movieSchema from './schema/movie';
 
 const DB_CONNECTION = process.env.DB_CONNECTION || 'postgres://postgres:postgres@localhost:5432/postgres';
 
-/**
- * Runs all pending Drizzle migrations against the configured Postgres database.
- * Uses a separate single-connection client so it doesn't interfere with the query pool.
- *
- * @returns Resolves when all migrations have been applied successfully.
- */
 export async function migrateDatabase () {
     console.info(`Migrating database at ${DB_CONNECTION}`)
-    const migrationClient = postgres(DB_CONNECTION, { max: 1 });
-    await migrate(drizzle(migrationClient), { migrationsFolder: './db/migrations'});
+    const migrationClient = postgres(DB_CONNECTION, { max: 1, connect_timeout: 10 });
+    try {
+        await migrate(drizzle(migrationClient), { migrationsFolder: './db/migrations'});
+    } finally {
+        await migrationClient.end();
+    }
 }
 
 // for query purposes
-const queryClient = postgres(DB_CONNECTION);
+const queryClient = postgres(DB_CONNECTION, { connect_timeout: 10 });
 export default drizzle(queryClient, { schema: {
     ...movieSchema,
     ...authSchema
