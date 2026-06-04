@@ -1,37 +1,41 @@
 <script lang="ts">
+    import type { Snippet } from 'svelte';
 
-    import Tooltip from "../help/tooltip.svelte";
+    interface Props {
+        title: string;
+        description?: string;
+        icon?: string;
+        el?: string;
+        icon_snippet?: Snippet;
+        [key: string]: unknown;
+    }
 
-
-    export let title: string;
-    export let short: string | undefined = undefined;
-    export let description: string | undefined = undefined;
-    export let icon: string | undefined = undefined;
-    export let el: string = 'div'
-
+    let { title, description, icon, el = 'div', icon_snippet, ...rest }: Props = $props();
 </script>
 
 
-<svelte:element this={el} {...$$restProps} class="bg-component tile">
+<svelte:element this={el} {...rest} class="bg-component tile">
     <h2>
-        <slot name="icon"><i class="{icon}"></i></slot>
+        {#if icon_snippet}
+            {@render icon_snippet()}
+        {:else}
+            <i class="{icon}"></i>
+        {/if}
         {title}
     </h2>
-    {#if short}<small>{short}</small>{/if}
-    {#if description}
-        <Tooltip pos="top-right">{description}</Tooltip>
-    {/if}
+    {#if description}<small>{description}</small>{/if}
 </svelte:element>
 
 
 <style lang="postcss">
+	@reference "../../../app.css";
     .tile {
         @apply relative block cursor-pointer;
-        @apply border-2 border-neutral-light rounded-lg p-md;
+        @apply border-2 border-border rounded-lg p-md;
     }
 
     .tile:hover,
     .tile:focus {
-        @apply border-neutral !important;
+        @apply border-ink-muted!;
     }
 </style>

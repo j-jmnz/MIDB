@@ -1,9 +1,16 @@
 <script lang="ts">
-    export let title: string;
-    export let date: Date;
-    export let description: string;
-    
-    const formattedDate = date.toDateString().split(' ').slice(1).join(' ');
+    interface Props {
+        title: string;
+        date: string;
+        description: string;
+    }
+
+    let { title, date, description }: Props = $props();
+
+    function formatDate(releaseDate: string) {
+        const d = new Date(releaseDate);
+        return d.toDateString().split(' ').slice(1).join(' ');
+    }
 </script>
 
 <div>
@@ -11,7 +18,7 @@
         {title}
     </h2>
 
-    <small>{formattedDate}</small>
+    <small>{formatDate(date)}</small>
 
     <p class="description">
         {description}
@@ -19,19 +26,20 @@
 </div>
 
 <style lang="postcss">
+	@reference "../../../app.css";
     div {
         @apply p-md;
     }
 
     h2 {
-        @apply leading-4;
+        @apply leading-4 pt-sm;
     }
 
     small {
-        @apply text-neutral;
+        @apply text-ink-muted;
     }
 
     p {
-        @apply mt-sm;
+        @apply mt-md;
     }
 </style>
