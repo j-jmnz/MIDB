@@ -31,6 +31,7 @@
 		"@storybook/svelte": "^9.0.0",
 		"@storybook/sveltekit": "^9.0.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.21.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.3.0",
