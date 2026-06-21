@@ -7,6 +7,7 @@
 ## Always
 
 - **Update `.CLAUDE/architecture.md`** whenever you add, move, rename, or delete a file, change a module's responsibility, add a shared component, or alter a structural pattern. The doc is a living snapshot; keep it current.
+- **Save every plan under `.CLAUDE/plans/`** as a markdown file (e.g. `.CLAUDE/plans/plan-<short-name>.md`). Implementation plans, design notes, and multi-step proposals all belong there — not scattered elsewhere or left only in chat.
 - **Run the verification baseline** before reporting a task done: `bun run check` → 0 errors, `bun run test:unit` → all pass, `bun run build` → clean.
 - **Use `$lib` and `$db` aliases** for all cross-folder imports. Relative `./` is for same-folder siblings only.
 
@@ -44,6 +45,7 @@
 - **Components own their styles.** A component's CSS classes should not leak into parent pages. If the same visual pattern appears in two pages, extract a component rather than duplicating the stylesheet.
 - **`@reference` depth.** `<style lang="postcss">` blocks need `@reference` pointing at `src/app.css`. Count the folder depth: four `../` for components two levels deep under `movies/*` or `ui/*`; three for shallower ones (`layout/`, `search/`). Wrong depth causes silent Tailwind resolution failures in unit tests.
 - **No orphan revival.** `ui/tile/processTileGrid`, `movies/metrics/metricsFrame`, `movies/sections/sectionSkeleton`, and `landing/topBar` are orphaned — do not reuse or revive them.
+- **Performance & smooth UX are a priority, especially above the fold.** Never block first paint on client-streamed data (e.g. DDD via `dddStream.svelte.js`): render a provisional/`pending` state immediately and update in place. Reserve layout so streamed/async updates cause **zero layout shift** — fixed-height cards, one-line clamped summaries (`line-clamp-1`), no reflow of siblings. Derive view state with `$derived` over already-loaded data (cheap, recomputes only on real input change); avoid effects, DOM measurement, and extra requests for first-render UI. Ease state changes with the shared `0.15s ease` transition and gate every animation on `prefers-reduced-motion` (see `metricChip.svelte`). Use `aria-busy` for in-progress streaming states instead of spinners that shift layout.
 
 ---
 
@@ -52,6 +54,20 @@
 - Tailwind v4, CSS-first. Source of truth is `src/app.css`.
 - Use design tokens (`--brand`, `--surface`, `--ink-muted`, etc.), not raw colours. Status tokens: `--success`, `--warn`, `--danger`, `--info`.
 - `<style lang="postcss">` + `@reference "…/app.css"` in every component that uses `@apply` or tokens.
+- **New components must match the existing visual language — reuse the established vocabulary, don't invent values.** Surfaces are `rounded-md border border-border bg-surface-raised`; hovers tint with `color-mix(in oklab, var(--brand) 35%, var(--border))`; tinted status fills use `color-mix(in oklab, var(--token) 16%, transparent)` with the solid token for text (see `collapsibleSection.svelte` `.status--*`); "no data"/neutral states use `--secondary-soft` bg + `--ink-muted` fg. Titles use the `.display` font; spacing/sizing use the `xs/sm/md/lg/xl` tokens. Before adding a card/pill/chip, copy the pattern from `collapsibleSection.svelte` or `metricChip.svelte` rather than picking new percentages or radii.
+- **Metric status rows share one marker language.** Per-item status lists (Bechdel criteria ladder, UM flags) use a `1.375rem` round marker holding a glyph or step number, rows `flex items-center gap-sm text-sm` with `padding-block: var(--spacing-xs)`. Active states fill `color-mix(--token 16%, transparent)` + solid-token glyph; inactive states stay quiet (`--secondary-soft`/`--ink-muted`, or a transparent marker with a `--border` hairline). **Pick the token semantically:** brand for neutral progress (Bechdel — pass/fail already lives in the section status pill, so no green/red banner), `--warn`/`--success` only where a per-item value is a real signal (UM concerns / `noRape` reassurance). When adding a new metric checklist, copy this marker — see the `.criterion-*` block in `movie/[movieId]/+page.svelte` and `.flag-*` in `umMetricSection.svelte`, and the *Shared marker pattern* section in `.CLAUDE/architecture.md`.
+- **Data legibility beats colour-coding.** In dense tables (cast/crew representation), keep numeric values in high-contrast `--ink`/`--ink-muted` and carry colour identity in bars + swatches — never colour the digits themselves (bright tokens like `--accent-bg` as text fail contrast). Give same-as-track segments (`unknown` on `--border`) an inset edge so they stay visible.
+
+---
+
+## Copy & voice
+
+Applies to all **user-facing** text (page copy, taglines, labels, notes) — not code comments, `<title>` tags, or commits. The `/resources` page is the reference voice; full rationale in `.CLAUDE/architecture.md` → *Copy & voice*.
+
+- **Matter-of-fact, not salesy.** State what a thing is and what happens. No marketing tone, rhetorical questions, reader flattery, or hedging filler ("just", "the gist", "roughly").
+- **Third person everywhere except the landing page (`/`).** Don't address the reader as "you" (use "the page", "a reader"); the landing page is the sole second-person exception. The site's own "we"/"our"/"MIDB" voice is fine.
+- **No em dashes (—) in copy.** Split sentences or use a colon. En dashes (–) stay in ranges (`0–3`, `adult–teen`).
+- **Claims must be code-backed.** Computation details, thresholds, and privacy claims must match the code (e.g. the verdict explainer mirrors `verdict.ts`). Update copy when the code changes.
 
 ---
 

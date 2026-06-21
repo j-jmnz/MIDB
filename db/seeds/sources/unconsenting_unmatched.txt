@@ -2873,7 +2873,7 @@ id	name	cleanNameArticles	yearOfRelease	reason	candidateYears
 8042	The Hating Game	hating game		no_match	
 6540	Hating Peter Tatchell	hating peter tatchell	2020	no_match	
 7629	The Hatton Garden Job	hatton garden job	2017	no_match	
-3437	Haunt	haunt		ambiguous	2013,2019
+3437	Haunt	haunt		ambiguous	2019,2013
 15533	Haunt Season	haunt season	2024	no_match	
 2823	The Haunted	haunted	1991	no_match	
 14395	The Haunted Castle (1921)	haunted castle 1921	1921	no_match	

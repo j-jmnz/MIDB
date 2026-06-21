@@ -2,6 +2,7 @@ import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { createDebouncedSearchStore } from '$lib/stores/debounced';
 import type { SearchResult } from './types';
+import { navigating } from '$app/stores';
 
 /**
  * Calls the `/api/search` endpoint and returns parsed search results.
@@ -28,6 +29,7 @@ export class MovieSearchState {
 	activeIndex = $state(-1);
 	loading = $state(false);
 	open = $state(false);
+	navigatingTo = $state<SearchResult | null>(null);
 
 	#store = createDebouncedSearchStore(fetchResults, 500);
 
@@ -42,14 +44,26 @@ export class MovieSearchState {
 		return item ? optionId(item.id, item.mediaType) : undefined;
 	}
 
-	/** Subscribe to the debounced result stream. Returns an unsubscribe fn for `$effect`. */
+	/** Subscribe to the debounced result stream and SvelteKit navigation. Returns an unsubscribe fn for `$effect`. */
 	connect() {
 		const sub = this.#store.subscribe((r) => {
 			this.results = r as SearchResult[];
 			this.activeIndex = -1;
 			this.loading = false;
 		});
-		return () => sub.unsubscribe();
+		// Clear pending navigation indicator once SvelteKit finishes (or aborts) navigation.
+		// If we initiated the navigation (a result was selected), also reset the box so the
+		// query/results don't linger on the destination page (e.g. the navbar search).
+		const navUnsub = navigating.subscribe((nav) => {
+			if (!nav) {
+				if (this.navigatingTo) this.reset();
+				this.navigatingTo = null;
+			}
+		});
+		return () => {
+			sub.unsubscribe();
+			navUnsub();
+		};
 	}
 
 	search(query: string) {
@@ -79,6 +93,15 @@ export class MovieSearchState {
 		this.open = false;
 		this.activeIndex = -1;
 		this.loading = false;
+		this.navigatingTo = null;
+	}
+
+	/** Fully clear the box — query, results and panel state — e.g. after navigating to a result. */
+	reset() {
+		this.query = '';
+		this.results = [];
+		this.#store.search('');
+		this.close();
 	}
 
 	highlight(index: number) {
@@ -112,6 +135,7 @@ export class MovieSearchState {
 	}
 
 	select(item: SearchResult) {
+		this.navigatingTo = item;
 		if (item.mediaType === 'tv') {
 			goto(resolve('/tv/[seriesId]', { seriesId: String(item.id) }));
 		} else {
